@@ -1,8 +1,8 @@
-// Interactive Terminal / CMD / Zsh Shell App
-// Powers hands-on CLI practice with real virtual filesystem integration
+// Authentic Terminal / Command Prompt / Zsh Shell Application
+// Tailored with exact color schemes, prompts, tabs, and font styling per OS
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Terminal as TerminalIcon, CornerDownLeft, Sparkles } from 'lucide-react';
+import { Plus, X, Sparkles, Terminal as TerminalIcon } from 'lucide-react';
 import { CommandInterpreter } from '../../services/commandInterpreter';
 import { useLearner } from '../../context/LearnerContext';
 import { useOS } from '../../context/OSContext';
@@ -12,29 +12,37 @@ export const TerminalApp = () => {
   const { learnerName, triggerChallengeEvent } = useLearner();
 
   const [interpreter] = useState(() => {
-    const user = learnerName.toLowerCase().replace(/\s+/g, '') || 'student';
+    const user = (learnerName || 'student').toLowerCase().replace(/\s+/g, '');
     const initDir = activeOS === 'windows' ? 'C:/Users/Student' : (activeOS === 'macos' ? `/Users/${user}` : `/home/${user}`);
     return new CommandInterpreter(activeOS, initDir, user);
   });
 
-  const [lines, setLines] = useState(() => [
-    { type: 'output', text: activeOS === 'windows' 
-        ? 'Microsoft Windows [Version 10.0.22631.3296]\n(c) Microsoft Corporation & SarlaYash. All rights reserved.\nType "help" for a list of supported commands.'
-        : `Welcome to SarlaYash OS Universe (${activeOS.toUpperCase()})\nType "help" or "fastfetch" to explore commands.\n`
+  const getInitialBanner = () => {
+    if (activeOS === 'windows') {
+      return 'Microsoft Windows [Version 10.0.22631.3296]\n(c) Microsoft Corporation. All rights reserved.\nType "help" for a list of supported commands.\n';
+    } else if (activeOS === 'macos') {
+      return `Last login: ${new Date().toDateString()} on ttys000\nType "help" or "fastfetch" to inspect system.\n`;
+    } else if (activeOS === 'chrome') {
+      return 'ChromeOS Crostini Linux container (penguin)\nType "help" or "vmc" for virtual machine commands.\n';
+    } else {
+      // Ubuntu
+      return `Welcome to Ubuntu 24.04 LTS (GNU/Linux 6.8.0-40-generic x86_64)\n * Documentation:  https://help.ubuntu.com\n * Management:     https://landscape.canonical.com\n * Support:        https://ubuntu.com/pro\n\nType "help" or "fastfetch" to begin.\n`;
     }
-  ]);
+  };
 
+  const [lines, setLines] = useState(() => [{ type: 'output', text: getInitialBanner() }]);
   const [inputVal, setInputVal] = useState('');
   const [historyIndex, setHistoryIndex] = useState(-1);
+  const [tabs, setTabs] = useState(['Tab 1']);
+  const [activeTabIdx, setActiveTabIdx] = useState(0);
+
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll on new lines
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [lines]);
 
-  // Keep focus on input
   const handleContainerClick = () => {
     inputRef.current?.focus();
   };
@@ -103,94 +111,117 @@ export const TerminalApp = () => {
         ]);
       }
       setInputVal('');
-    }, 50);
+    }, 40);
   };
 
-  // Convert simple ANSI color codes to styled HTML
   const formatAnsi = (text) => {
     const parts = text.split(/(\x1b\[[0-9;]*m)/g);
     let currentColor = '';
 
     return parts.map((part, i) => {
-      if (part === '\x1b[0m') {
-        currentColor = '';
-        return null;
-      } else if (part === '\x1b[31m') {
-        currentColor = 'text-red-400';
-        return null;
-      } else if (part === '\x1b[32m') {
-        currentColor = 'text-emerald-400';
-        return null;
-      } else if (part === '\x1b[33m') {
-        currentColor = 'text-amber-400';
-        return null;
-      } else if (part === '\x1b[34m') {
-        currentColor = 'text-blue-400';
-        return null;
-      } else if (part === '\x1b[35m') {
-        currentColor = 'text-purple-400';
-        return null;
-      } else if (part === '\x1b[36m') {
-        currentColor = 'text-cyan-400';
-        return null;
-      } else if (part === '\x1b[37m') {
-        currentColor = 'text-white';
-        return null;
-      }
+      if (part === '\x1b[0m') { currentColor = ''; return null; }
+      if (part === '\x1b[31m') { currentColor = 'text-red-400'; return null; }
+      if (part === '\x1b[32m') { currentColor = 'text-emerald-400'; return null; }
+      if (part === '\x1b[33m') { currentColor = 'text-amber-400'; return null; }
+      if (part === '\x1b[34m') { currentColor = 'text-blue-400'; return null; }
+      if (part === '\x1b[35m') { currentColor = 'text-purple-400'; return null; }
+      if (part === '\x1b[36m') { currentColor = 'text-cyan-400'; return null; }
+      if (part === '\x1b[37m') { currentColor = 'text-white'; return null; }
 
-      return (
-        <span key={i} className={currentColor || undefined}>
-          {part}
-        </span>
-      );
+      return <span key={i} className={currentColor || undefined}>{part}</span>;
     });
   };
 
-  const isWin = activeOS === 'windows';
+  // OS-specific Terminal Styles
+  const getTerminalColors = () => {
+    switch (activeOS) {
+      case 'windows':
+        return 'bg-[#0c0c0c] text-[#cccccc] font-mono';
+      case 'macos':
+        return 'bg-[#1e1e1e] text-[#f2f2f2] font-mono';
+      case 'chrome':
+        return 'bg-[#202124] text-[#e8eaed] font-mono';
+      default:
+        // Ubuntu
+        return 'bg-[#300a24] text-[#ffffff] font-mono';
+    }
+  };
+
+  const getPromptColor = () => {
+    switch (activeOS) {
+      case 'windows':
+        return 'text-[#ffffff] font-bold';
+      case 'macos':
+        return 'text-[#48d1cc] font-bold';
+      case 'chrome':
+        return 'text-[#8ab4f8] font-bold';
+      default:
+        // Ubuntu: green user@host, blue path
+        return 'text-[#4e9a06] font-bold';
+    }
+  };
 
   return (
     <div
       onClick={handleContainerClick}
-      className={`h-full flex flex-col font-mono text-xs sm:text-sm select-text ${
-        isWin ? 'bg-black text-slate-100' : 'bg-slate-950 text-emerald-400'
-      }`}
+      className={`h-full flex flex-col text-xs sm:text-sm select-text ${getTerminalColors()}`}
     >
-      {/* Quick Mobile Command Chips */}
-      <div className="flex items-center gap-1.5 p-2 bg-slate-900/90 border-b border-slate-800 overflow-x-auto scrollbar-none shrink-0 select-none">
-        <span className="text-[10px] text-slate-400 font-sans uppercase font-bold px-1 flex items-center gap-1">
-          <Sparkles className="w-3 h-3 text-amber-400" />
-          <span>Quick:</span>
-        </span>
-        {(isWin ? ['dir', 'ipconfig', 'systeminfo', 'mkdir Lab', 'cls', 'help'] : ['ls -la', 'fastfetch', 'pwd', 'mkdir Lab', 'chmod 755 start_here.sh', 'top', 'clear', 'help']).map((c) => (
+      {/* Modern Terminal Tab Bar */}
+      <div className="flex items-center justify-between px-2 bg-black/40 border-b border-white/5 select-none shrink-0 h-8">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+          {tabs.map((tab, idx) => (
+            <div
+              key={idx}
+              className={`flex items-center gap-2 px-3 py-1 rounded-t-lg text-xs transition-colors cursor-pointer ${
+                activeTabIdx === idx
+                  ? 'bg-white/10 text-white font-medium border-t-2 border-blue-500'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <TerminalIcon className="w-3.5 h-3.5" />
+              <span>{tab}</span>
+            </div>
+          ))}
           <button
-            key={c}
-            onClick={(e) => { e.stopPropagation(); quickRun(c); }}
-            className="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-slate-300 hover:text-white border border-slate-700 text-[11px] whitespace-nowrap"
+            onClick={() => setTabs(prev => [...prev, `Tab ${prev.length + 1}`])}
+            className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white"
           >
-            {c}
+            <Plus className="w-3.5 h-3.5" />
           </button>
-        ))}
+        </div>
+
+        {/* Quick Command Chips */}
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1">
+          {(activeOS === 'windows' 
+            ? ['dir', 'ipconfig', 'systeminfo', 'mkdir Lab', 'cls', 'help'] 
+            : ['ls -la', 'fastfetch', 'pwd', 'mkdir Lab', 'chmod 755 start_here.sh', 'top', 'clear', 'help']
+          ).map((c) => (
+            <button
+              key={c}
+              onClick={(e) => { e.stopPropagation(); quickRun(c); }}
+              className="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 active:bg-blue-600 text-slate-200 border border-white/10 text-[10px] whitespace-nowrap font-mono"
+            >
+              {c}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Terminal Output Stream */}
-      <div className="flex-1 p-3 overflow-y-auto space-y-1">
+      {/* Output Screen */}
+      <div className="flex-1 p-3.5 overflow-y-auto space-y-1 font-mono leading-relaxed">
         {lines.map((line, idx) => (
-          <div key={idx} className="whitespace-pre-wrap leading-relaxed break-all">
+          <div key={idx} className="whitespace-pre-wrap break-all">
             {line.type === 'prompt' ? (
-              <span className={isWin ? 'text-white font-bold' : 'text-blue-400 font-bold'}>
-                {line.text}
-              </span>
+              <span className={getPromptColor()}>{line.text}</span>
             ) : (
-              <span className={isWin ? 'text-slate-200' : 'text-emerald-300/90'}>
-                {formatAnsi(line.text)}
-              </span>
+              <span className="opacity-95">{formatAnsi(line.text)}</span>
             )}
           </div>
         ))}
 
-        {/* Active Prompt Line */}
-        <form onSubmit={handleCommandSubmit} className="flex items-center gap-1 pt-1">
-          <span className={isWin ? 'text-white font-bold shrink-0' : 'text-blue-400 font-bold shrink-0'}>
+        {/* Active Input Line */}
+        <form onSubmit={handleCommandSubmit} className="flex items-center gap-1 pt-0.5">
+          <span className={`${getPromptColor()} shrink-0`}>
             {interpreter.getPrompt()}
           </span>
           <input
@@ -200,7 +231,7 @@ export const TerminalApp = () => {
             onChange={(e) => setInputVal(e.target.value)}
             onKeyDown={handleKeyDown}
             autoFocus
-            className="flex-1 bg-transparent border-none outline-none text-white font-mono text-xs sm:text-sm p-0 m-0 caret-emerald-400"
+            className="flex-1 bg-transparent border-none outline-none text-white font-mono text-xs sm:text-sm p-0 m-0 caret-white"
           />
         </form>
         <div ref={bottomRef} />
