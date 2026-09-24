@@ -92,6 +92,45 @@ export const certificateService = {
     return certificate;
   },
 
+  // Sanitize modern CSS colors (like oklch) in cloned elements before html2canvas renders
+  sanitizeClonedElement(clonedElement) {
+    if (!clonedElement) return;
+
+    try {
+      const tempCanvas = document.createElement('canvas');
+      const ctx = tempCanvas.getContext('2d');
+
+      const resolveColor = (colorStr) => {
+        if (!colorStr || typeof colorStr !== 'string') return colorStr;
+        if (!colorStr.includes('oklch') && !colorStr.includes('color(')) return colorStr;
+        try {
+          ctx.fillStyle = colorStr;
+          return ctx.fillStyle; // Converts to standard hex or rgba
+        } catch {
+          return '#1e293b';
+        }
+      };
+
+      const targets = [clonedElement, ...clonedElement.querySelectorAll('*')];
+      targets.forEach(el => {
+        try {
+          const computed = window.getComputedStyle(el);
+          const bg = computed.backgroundColor;
+          const col = computed.color;
+          const bTop = computed.borderTopColor;
+
+          if (bg && (bg.includes('oklch') || bg.includes('color('))) el.style.backgroundColor = resolveColor(bg);
+          if (col && (col.includes('oklch') || col.includes('color('))) el.style.color = resolveColor(col);
+          if (bTop && (bTop.includes('oklch') || bTop.includes('color('))) el.style.borderColor = resolveColor(bTop);
+        } catch {
+          // ignore element style lookup issues
+        }
+      });
+    } catch {
+      // fallback
+    }
+  },
+
   // Export as High-Resolution PDF
   async downloadCertificatePDF(elementId, filename = 'SarlaYash_OS_Certificate.pdf') {
     const element = document.getElementById(elementId);
@@ -101,7 +140,10 @@ export const certificateService = {
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc, clonedEl) => {
+          this.sanitizeClonedElement(clonedEl);
+        }
       });
 
       const imgData = canvas.toDataURL('image/png');
@@ -129,7 +171,10 @@ export const certificateService = {
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        onclone: (clonedDoc, clonedEl) => {
+          this.sanitizeClonedElement(clonedEl);
+        }
       });
 
       const imgData = canvas.toDataURL('image/png');

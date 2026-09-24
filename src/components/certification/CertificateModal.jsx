@@ -248,22 +248,35 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
               {/* ======================================================== */}
               <div
                 id="sarlayash-certificate-canvas"
-                className="relative bg-gradient-to-br from-slate-50 via-amber-50/20 to-slate-100 text-slate-900 border-8 border-amber-600/30 p-5 sm:p-10 rounded-2xl shadow-2xl space-y-5 text-center select-text overflow-hidden"
+                style={{
+                  backgroundColor: '#ffffff',
+                  backgroundImage: 'radial-gradient(circle at 50% 50%, #fffdf7 0%, #fefcf3 100%)',
+                  color: '#0f172a',
+                  borderColor: '#d97706'
+                }}
+                className="relative border-8 p-5 sm:p-10 rounded-2xl shadow-2xl space-y-5 text-center select-text overflow-hidden"
               >
                 {/* Guilloche / Elegant Corner Decor */}
-                <div className="absolute top-2 left-2 w-12 h-12 border-t-2 border-l-2 border-amber-600" />
-                <div className="absolute top-2 right-2 w-12 h-12 border-t-2 border-r-2 border-amber-600" />
-                <div className="absolute bottom-2 left-2 w-12 h-12 border-b-2 border-l-2 border-amber-600" />
-                <div className="absolute bottom-2 right-2 w-12 h-12 border-b-2 border-r-2 border-amber-600" />
+                <div style={{ borderColor: '#d97706' }} className="absolute top-2 left-2 w-12 h-12 border-t-2 border-l-2" />
+                <div style={{ borderColor: '#d97706' }} className="absolute top-2 right-2 w-12 h-12 border-t-2 border-r-2" />
+                <div style={{ borderColor: '#d97706' }} className="absolute bottom-2 left-2 w-12 h-12 border-b-2 border-l-2" />
+                <div style={{ borderColor: '#d97706' }} className="absolute bottom-2 right-2 w-12 h-12 border-b-2 border-r-2" />
 
                 {/* DEMO PREVIEW DIAGONAL WATERMARK OVERLAY */}
                 {!isCertificateUnlocked && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-20 overflow-hidden">
-                    <div className="transform -rotate-25 border-4 border-dashed border-red-500/50 bg-red-600/10 px-8 py-3 rounded-2xl shadow-xl backdrop-blur-[1px]">
-                      <div className="text-2xl sm:text-4xl font-black text-red-600/70 tracking-widest uppercase font-mono">
+                    <div
+                      style={{
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(254, 242, 242, 0.85)',
+                        color: '#b91c1c'
+                      }}
+                      className="transform -rotate-25 border-4 border-dashed px-8 py-3 rounded-2xl shadow-xl"
+                    >
+                      <div style={{ color: '#dc2626' }} className="text-2xl sm:text-4xl font-black tracking-widest uppercase font-mono">
                         DEMO PREVIEW • SAMPLE ONLY
                       </div>
-                      <div className="text-[10px] sm:text-xs font-bold text-red-700/80 tracking-wider uppercase mt-0.5">
+                      <div style={{ color: '#991b1b' }} className="text-[10px] sm:text-xs font-bold tracking-wider uppercase mt-0.5">
                         PASS 120-MIN 500Q EXAM (≥90%) + COMPLETE ALL 4 OS TO UNLOCK OFFICIAL CREDENTIAL
                       </div>
                     </div>
@@ -272,27 +285,33 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
 
                 {/* Header */}
                 <div className="space-y-1 relative z-10">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase bg-amber-100 text-amber-800 border border-amber-300">
+                  <div
+                    style={{ backgroundColor: '#fef3c7', color: '#92400e', borderColor: '#fcd34d' }}
+                    className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase border"
+                  >
                     {isCertificateUnlocked ? 'OFFICIAL CERTIFICATE OF PRACTICAL MASTERY' : 'DEMO PREVIEW • CERTIFICATE OF PRACTICAL MASTERY'}
                   </div>
-                  <h1 className="text-2xl sm:text-4xl font-serif font-black text-slate-900 tracking-tight mt-1">
+                  <h1 style={{ color: '#0f172a' }} className="text-2xl sm:text-4xl font-serif font-black tracking-tight mt-1">
                     SarlaYash OS Universe
                   </h1>
-                  <p className="text-xs sm:text-sm font-semibold tracking-wide text-amber-800 uppercase">
+                  <p style={{ color: '#92400e' }} className="text-xs sm:text-sm font-semibold tracking-wide uppercase">
                     Mobile-First Virtual Computer Lab • Powered by Kapil
                   </p>
                 </div>
 
                 {/* Recipient */}
                 <div className="space-y-1 py-1 relative z-10">
-                  <p className="text-xs text-slate-500 italic">This credential is conferred upon</p>
-                  <div className="text-2xl sm:text-3xl font-serif font-bold text-slate-950 border-b-2 border-amber-500/60 pb-1 max-w-md mx-auto">
+                  <p style={{ color: '#64748b' }} className="text-xs italic">This credential is conferred upon</p>
+                  <div
+                    style={{ color: '#020617', borderColor: '#d97706' }}
+                    className="text-2xl sm:text-3xl font-serif font-bold border-b-2 pb-1 max-w-md mx-auto"
+                  >
                     {certData.learnerName || learnerName || 'Student Learner'}
                   </div>
                 </div>
 
                 {/* Achievement Description */}
-                <p className="text-xs sm:text-sm text-slate-700 max-w-xl mx-auto leading-relaxed relative z-10">
+                <p style={{ color: '#334155' }} className="text-xs sm:text-sm max-w-xl mx-auto leading-relaxed relative z-10">
                   For completing hands-on practical simulations across major operating systems including setup, disk partitioning, file system navigation, permissions administration, and successfully achieving distinction on the 120-minute 500-question Final Mock Assessment.
                 </p>
 
@@ -301,28 +320,29 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
                   {['Microsoft Windows 11', 'Ubuntu Linux 24.04', 'Apple macOS Sonoma', 'Google ChromeOS'].map((os) => (
                     <span
                       key={os}
-                      className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-600/30 text-[11px] font-semibold text-slate-800 flex items-center gap-1 shadow-sm"
+                      style={{ backgroundColor: '#fffbeb', borderColor: '#fcd34d', color: '#78350f' }}
+                      className="px-2.5 py-1 rounded-lg border text-[11px] font-semibold flex items-center gap-1 shadow-sm"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" />
+                      <CheckCircle2 style={{ color: '#d97706' }} className="w-3.5 h-3.5" />
                       <span>{os}</span>
                     </span>
                   ))}
                 </div>
 
                 {/* Footer Credentials & QR Code */}
-                <div className="pt-4 border-t border-slate-300 flex flex-col sm:flex-row items-center justify-between gap-4 text-left text-xs relative z-10">
+                <div style={{ borderColor: '#cbd5e1' }} className="pt-4 border-t flex flex-col sm:flex-row items-center justify-between gap-4 text-left text-xs relative z-10">
                   {/* Left: Certificate Details */}
                   <div className="space-y-1">
-                    <div className="font-mono text-[11px] text-slate-700">
+                    <div style={{ color: '#334155' }} className="font-mono text-[11px]">
                       <strong>Certificate ID:</strong> {certData.id}
                     </div>
-                    <div className="text-[11px] text-slate-600">
+                    <div style={{ color: '#475569' }} className="text-[11px]">
                       <strong>500Q Final Score:</strong> {certData.score || mockExamScore || 100}% (Passing: 90%)
                     </div>
-                    <div className="text-[11px] text-slate-600">
+                    <div style={{ color: '#475569' }} className="text-[11px]">
                       <strong>Issued On:</strong> {certData.issueDate}
                     </div>
-                    <div className="text-[10px] text-slate-500 font-mono">
+                    <div style={{ color: '#64748b' }} className="text-[10px] font-mono">
                       <strong>Status:</strong> {isCertificateUnlocked ? 'VERIFIED AUTHENTIC' : 'DEMO PREVIEW SAMPLE'}
                     </div>
                   </div>
@@ -330,24 +350,24 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
                   {/* Center: Real Scannable QR Code */}
                   {certData.qrDataUrl && (
                     <div className="flex flex-col items-center">
-                      <div className="p-1 bg-white border border-slate-300 rounded-lg shadow-sm">
+                      <div style={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1' }} className="p-1 border rounded-lg shadow-sm">
                         <img
                           src={certData.qrDataUrl}
                           alt="Verification QR"
                           className="w-20 h-20 sm:w-24 sm:h-24"
                         />
                       </div>
-                      <span className="text-[9px] text-slate-500 font-mono mt-1">Scan to Verify</span>
+                      <span style={{ color: '#64748b' }} className="text-[9px] font-mono mt-1">Scan to Verify</span>
                     </div>
                   )}
 
                   {/* Right: Signature Line */}
                   <div className="text-center sm:text-right space-y-1">
-                    <div className="font-serif italic text-base text-slate-800 border-b border-slate-400 pb-0.5 font-bold">
+                    <div style={{ color: '#1e293b', borderColor: '#94a3b8' }} className="font-serif italic text-base border-b pb-0.5 font-bold">
                       Kapil Narula
                     </div>
-                    <div className="text-[11px] font-bold text-slate-700">Kapil Narula</div>
-                    <div className="text-[10px] text-slate-500">Founder & Educator • SarlaYash</div>
+                    <div style={{ color: '#334155' }} className="text-[11px] font-bold">Kapil Narula</div>
+                    <div style={{ color: '#64748b' }} className="text-[10px]">Founder & Educator • SarlaYash</div>
                   </div>
                 </div>
               </div>
