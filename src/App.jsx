@@ -111,6 +111,10 @@ const MainLabContainer = () => {
       <CertificateModal
         isOpen={certificateOpen}
         onClose={() => setCertificateOpen(false)}
+        onOpenAssessment={() => {
+          setCertificateOpen(false);
+          setAssessmentOpen(true);
+        }}
       />
       <FounderPanelModal
         isOpen={founderOpen}

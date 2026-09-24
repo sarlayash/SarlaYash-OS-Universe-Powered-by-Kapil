@@ -176,11 +176,11 @@ export const CHALLENGES = [
   {
     id: 'final_assessment',
     title: 'OS Universe Champion',
-    category: 'Advanced',
+    category: 'Mastery',
     os: 'any',
-    points: 200,
-    description: 'Pass the comprehensive practical assessment exam with a score of 80% or higher.',
-    hint: 'Take the Practical Assessment in the Certification tab.'
+    points: 500,
+    description: 'Pass the 120-minute 500-question Final Mock Assessment with a score of 90% (≥450/500) across all 4 OS types.',
+    hint: 'Take the 120-Minute Final Mock Exam in the Certification tab.'
   }
 ];
 
@@ -334,6 +334,6 @@ export const BADGE_DEFINITIONS = [
     title: 'OS Universe Champion',
     icon: 'Trophy',
     color: 'from-purple-500 to-pink-600',
-    requirement: 'Pass the final practical assessment exam with a score of 80% or higher.'
+    requirement: 'Pass the 120-minute 500-question Final Mock Assessment with a score of 90% (≥450/500).'
   }
 ];

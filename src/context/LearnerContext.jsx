@@ -18,6 +18,9 @@ const defaultState = {
   earnedBadges: [],
   totalCommandsRun: 0,
   assessmentScore: null,
+  mockExamScore: null,
+  mockExamPassed: false,
+  mockExamStats: null,
   issuedCertificate: null,
   points: 0
 };
@@ -75,8 +78,9 @@ export const LearnerProvider = ({ children }) => {
       newBadgeUnlocked = true;
     }
 
-    // 4. OS Champion: Assessment score >= 80%
-    if (newState.assessmentScore !== null && newState.assessmentScore >= 80 && !updatedBadges.includes('os_champion')) {
+    // 4. OS Champion: 120-minute 500Q Assessment score >= 90%
+    const isChampion = (newState.mockExamScore !== null && newState.mockExamScore >= 90) || newState.mockExamPassed;
+    if (isChampion && !updatedBadges.includes('os_champion')) {
       updatedBadges.push('os_champion');
       newBadgeUnlocked = true;
     }
@@ -213,41 +217,72 @@ export const LearnerProvider = ({ children }) => {
     });
   };
 
-  // Submit assessment
-  const submitPracticalAssessment = (score) => {
+  // Submit 120-minute 500Q Mock Assessment
+  const submitMockExam = ({ score, correctCount, totalQuestions, timeSpentSec, domainScores }) => {
     setState(prev => {
+      const passed = score >= 90;
       let completedChallenges = [...prev.completedChallenges];
-      let points = prev.points;
+      let addedPoints = 0;
 
-      if (score >= 80 && !completedChallenges.includes('final_assessment')) {
+      if (passed && !completedChallenges.includes('final_assessment')) {
         completedChallenges.push('final_assessment');
-        points += 200;
+        addedPoints += 500;
       }
 
       const nextState = {
         ...prev,
         assessmentScore: score,
+        mockExamScore: score,
+        mockExamPassed: passed,
+        mockExamStats: {
+          total: totalQuestions || 500,
+          correct: correctCount,
+          timeSpentSec: timeSpentSec || 0,
+          completedAt: new Date().toISOString(),
+          domainScores: domainScores || {}
+        },
         completedChallenges,
-        points
+        points: prev.points + addedPoints
       };
       return checkBadgeUnlocks(nextState);
     });
   };
 
-  // Issue Certificate
-  const generateOfficialCertificate = async () => {
+  // Submit assessment (compatibility wrapper)
+  const submitPracticalAssessment = (score) => {
+    submitMockExam({
+      score,
+      correctCount: Math.round((score / 100) * 500),
+      totalQuestions: 500,
+      timeSpentSec: 0,
+      domainScores: {}
+    });
+  };
+
+  // Check section completion requirements
+  const allOSInstalled = ['windows', 'linux', 'macos', 'chrome'].every(os => state.installedOS.includes(os));
+  const allOSExplored = ['windows', 'linux', 'macos', 'chrome'].every(os => state.exploredOS.includes(os));
+  const isMockExamPassed = Boolean(state.mockExamPassed && state.mockExamScore !== null && state.mockExamScore >= 90);
+  const isCertificateUnlocked = Boolean(allOSInstalled && allOSExplored && isMockExamPassed);
+
+  // Issue Certificate (Official or Demo Preview)
+  const generateOfficialCertificate = async (isDemo = false) => {
     const cert = await certificateService.createCertificate({
       learnerName: state.learnerName || 'SarlaYash Student',
       completedOS: state.installedOS,
-      score: state.assessmentScore || 100,
-      badges: state.earnedBadges
+      score: state.mockExamScore || state.assessmentScore || 100,
+      badges: state.earnedBadges,
+      isDemo
     });
-    setState(prev => ({
-      ...prev,
-      issuedCertificate: cert
-    }));
-    audioService.playSuccess();
-    confetti({ particleCount: 100, spread: 80 });
+
+    if (!isDemo && isCertificateUnlocked) {
+      setState(prev => ({
+        ...prev,
+        issuedCertificate: cert
+      }));
+      audioService.playSuccess();
+      confetti({ particleCount: 100, spread: 80 });
+    }
     return cert;
   };
 
@@ -261,10 +296,15 @@ export const LearnerProvider = ({ children }) => {
     <LearnerContext.Provider
       value={{
         ...state,
+        allOSInstalled,
+        allOSExplored,
+        isMockExamPassed,
+        isCertificateUnlocked,
         completeOnboarding,
         markInstallationCompleted,
         markOSExplored,
         triggerChallengeEvent,
+        submitMockExam,
         submitPracticalAssessment,
         generateOfficialCertificate,
         resetAllProgress,

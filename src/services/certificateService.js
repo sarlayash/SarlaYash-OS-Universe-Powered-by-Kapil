@@ -28,8 +28,9 @@ export const certificateService = {
     return certs[certId.trim().toUpperCase()] || null;
   },
 
-  async createCertificate({ learnerName, completedOS, score = 100, badges = [] }) {
-    const certId = this.generateCertificateId();
+  async createCertificate({ learnerName, completedOS, score = 100, badges = [], isDemo = false }) {
+    const rawId = this.generateCertificateId();
+    const certId = isDemo ? `DEMO-PREVIEW-${new Date().getFullYear()}-${Math.random().toString(36).substring(2, 6).toUpperCase()}` : rawId;
     const issueDate = new Date().toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -43,7 +44,11 @@ export const certificateService = {
       score: `${score}%`,
       issuer: 'SarlaYash OS Universe - Powered by Kapil',
       issuedOn: issueDate,
-      systems: completedOS
+      systems: completedOS,
+      criteria: isDemo
+        ? 'DEMO PREVIEW ONLY - Complete all 4 OS and pass 120-min 500Q exam (≥90%) to unlock official credential'
+        : '120-Min 500Q Assessment Passed (≥90%) + All 4 OS Labs Completed',
+      status: isDemo ? 'PREVIEW_LOCKED' : 'VERIFIED_OFFICIAL'
     };
 
     // Generate real scannable QR Code
@@ -69,21 +74,25 @@ export const certificateService = {
       badges,
       issueDate,
       qrDataUrl,
-      verified: true
+      isDemo,
+      verified: !isDemo
     };
 
-    // Store in issued certificates register
-    const all = this.getAllCertificates();
-    all[certId] = certificate;
-    try {
-      localStorage.setItem(CERT_STORE_KEY, JSON.stringify(all));
-    } catch (e) {
-      console.warn('Could not save certificate:', e);
+    // Only store official verified certificates in verified registry
+    if (!isDemo) {
+      const all = this.getAllCertificates();
+      all[certId] = certificate;
+      try {
+        localStorage.setItem(CERT_STORE_KEY, JSON.stringify(all));
+      } catch (e) {
+        console.warn('Could not save certificate:', e);
+      }
     }
 
     return certificate;
   },
 
+  // Export as High-Resolution PDF
   async downloadCertificatePDF(elementId, filename = 'SarlaYash_OS_Certificate.pdf') {
     const element = document.getElementById(elementId);
     if (!element) return false;
@@ -107,6 +116,32 @@ export const certificateService = {
       return true;
     } catch (err) {
       console.error('PDF export error:', err);
+      return false;
+    }
+  },
+
+  // Export as High-Resolution PNG Image
+  async downloadCertificatePNG(elementId, filename = 'SarlaYash_OS_Certificate.png') {
+    const element = document.getElementById(elementId);
+    if (!element) return false;
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff'
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = imgData;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return true;
+    } catch (err) {
+      console.error('PNG export error:', err);
       return false;
     }
   }

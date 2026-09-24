@@ -15,16 +15,27 @@ import {
   Play, 
   ShieldCheck, 
   Smartphone, 
-  MousePointer, 
   Keyboard as KeyboardIcon,
-  HelpCircle
+  HelpCircle,
+  Lock
 } from 'lucide-react';
 import { ChromeIcon } from '../icons/ChromeIcon';
 import { useLearner } from '../../context/LearnerContext';
 import { useOS } from '../../context/OSContext';
 
 export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, onOpenFounder }) => {
-  const { learnerName, installedOS, exploredOS, earnedBadges, completedChallenges, totalCommandsRun, points } = useLearner();
+  const { 
+    learnerName, 
+    installedOS, 
+    exploredOS, 
+    earnedBadges, 
+    completedChallenges, 
+    totalCommandsRun, 
+    points,
+    isCertificateUnlocked,
+    mockExamPassed,
+    mockExamScore 
+  } = useLearner();
   const { switchOS, toggleTrackpad, toggleKeyboard, mobileControls } = useOS();
 
   const OS_LABS = [
@@ -118,8 +129,8 @@ export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, 
             className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 flex items-center justify-between transition-all group"
           >
             <div className="text-left">
-              <div className="text-xs text-slate-400">Knowledge Exam</div>
-              <div className="text-sm font-bold text-white group-hover:text-purple-400">Assessment</div>
+              <div className="text-xs text-purple-400 font-semibold">120-Min • 500Q (90% Pass)</div>
+              <div className="text-sm font-bold text-white group-hover:text-purple-400">Final Assessment</div>
             </div>
             <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400">
               <Trophy className="w-5 h-5" />
@@ -128,14 +139,22 @@ export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, 
 
           <button
             onClick={onOpenCertificate}
-            className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-amber-500/50 flex items-center justify-between transition-all group"
+            className={`p-4 rounded-2xl border flex items-center justify-between transition-all group ${
+              isCertificateUnlocked
+                ? 'bg-amber-500/10 border-amber-500/40 hover:border-amber-400'
+                : 'bg-slate-900 border-slate-800 hover:border-amber-500/50'
+            }`}
           >
             <div className="text-left">
-              <div className="text-xs text-slate-400">Verified Credential</div>
-              <div className="text-sm font-bold text-white group-hover:text-amber-400">QR Certificate</div>
+              <div className={`text-xs font-semibold ${isCertificateUnlocked ? 'text-emerald-400' : 'text-slate-400'}`}>
+                {isCertificateUnlocked ? 'Verified & Unlocked' : 'Locked • Demo Preview'}
+              </div>
+              <div className="text-sm font-bold text-white group-hover:text-amber-400">
+                {isCertificateUnlocked ? 'Official Certificate' : 'Preview Certificate'}
+              </div>
             </div>
-            <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-400">
-              <ShieldCheck className="w-5 h-5" />
+            <div className={`p-2.5 rounded-xl ${isCertificateUnlocked ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-amber-400'}`}>
+              {isCertificateUnlocked ? <ShieldCheck className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
             </div>
           </button>
 

@@ -16,7 +16,8 @@ import {
   RotateCw,
   Mail,
   Menu,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 import { ChromeIcon } from '../icons/ChromeIcon';
 import { useOS } from '../../context/OSContext';
@@ -24,7 +25,7 @@ import { useLearner } from '../../context/LearnerContext';
 
 export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, onOpenFounder }) => {
   const { activeOS, mode, setMode, switchOS, soundMuted, toggleSound, toggleTrackpad, toggleKeyboard, mobileControls } = useOS();
-  const { completedChallenges, earnedBadges } = useLearner();
+  const { completedChallenges, earnedBadges, isCertificateUnlocked } = useLearner();
   const [osDropdownOpen, setOsDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -134,18 +135,28 @@ export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertifi
         <button
           onClick={onOpenAssessment}
           className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white"
+          title="120-Minute 500-Question Final Mock Assessment"
         >
           <Trophy className="w-3.5 h-3.5 text-purple-400" />
-          <span>Exam</span>
+          <span>500Q Exam</span>
         </button>
 
         {/* Certificate */}
         <button
           onClick={onOpenCertificate}
-          className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white"
+          className={`hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl border transition-all ${
+            isCertificateUnlocked
+              ? 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20'
+              : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+          }`}
+          title={isCertificateUnlocked ? 'Certificate Unlocked' : 'Certificate Locked (Demo Preview Available)'}
         >
-          <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
-          <span>Certificate</span>
+          {isCertificateUnlocked ? (
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
+          ) : (
+            <Lock className="w-3.5 h-3.5 text-amber-400/80" />
+          )}
+          <span>{isCertificateUnlocked ? 'Certificate' : 'Cert (Locked)'}</span>
         </button>
 
         {/* Virtual Mouse Toggle */}
@@ -236,14 +247,18 @@ export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertifi
               className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold"
             >
               <Trophy className="w-4 h-4 text-purple-400" />
-              <span>Exam</span>
+              <span>500Q Exam</span>
             </button>
             <button
               onClick={onOpenCertificate}
               className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold"
             >
-              <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <span>Certificate</span>
+              {isCertificateUnlocked ? (
+                <ShieldCheck className="w-4 h-4 text-amber-400" />
+              ) : (
+                <Lock className="w-4 h-4 text-amber-400/80" />
+              )}
+              <span>{isCertificateUnlocked ? 'Certificate' : 'Cert (Locked)'}</span>
             </button>
           </div>
         </div>
