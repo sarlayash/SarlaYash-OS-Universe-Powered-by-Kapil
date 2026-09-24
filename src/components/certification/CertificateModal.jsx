@@ -6,7 +6,6 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   X, 
-  Download, 
   Sparkles, 
   Award, 
   Search, 
@@ -14,12 +13,10 @@ import {
   QrCode, 
   Check,
   Lock,
-  Unlock,
   AlertCircle,
   FileText,
   Image,
   ArrowRight,
-  ExternalLink,
   Laptop,
   Terminal,
   Apple
@@ -36,10 +33,8 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
     allOSInstalled,
     allOSExplored,
     mockExamScore, 
-    mockExamPassed,
     isMockExamPassed,
     isCertificateUnlocked, 
-    earnedBadges, 
     issuedCertificate, 
     generateOfficialCertificate 
   } = useLearner();

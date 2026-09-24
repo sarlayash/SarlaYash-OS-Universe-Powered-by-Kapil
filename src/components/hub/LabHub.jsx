@@ -15,6 +15,7 @@ import {
   Play, 
   ShieldCheck, 
   Smartphone, 
+  MousePointer,
   Keyboard as KeyboardIcon,
   HelpCircle,
   Lock
