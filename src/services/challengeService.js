@@ -335,5 +335,12 @@ export const BADGE_DEFINITIONS = [
     icon: 'Trophy',
     color: 'from-purple-500 to-pink-600',
     requirement: 'Pass the 120-minute 500-question Final Mock Assessment with a score of 90% (≥450/500).'
+  },
+  {
+    id: 'hard_champion',
+    title: 'Proctor Grandmaster',
+    icon: 'ShieldAlert',
+    color: 'from-red-500 to-amber-600',
+    requirement: 'Conquer the 2-Hour 100 Hard-Level Proctored Assessment (≥90%) under strict anti-cheat conditions.'
   }
 ];

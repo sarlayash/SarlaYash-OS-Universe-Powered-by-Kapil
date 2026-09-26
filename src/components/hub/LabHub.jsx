@@ -14,11 +14,16 @@ import {
   RotateCw, 
   Play, 
   ShieldCheck, 
+  ShieldAlert,
   Smartphone, 
-  MousePointer,
-  Keyboard as KeyboardIcon,
-  HelpCircle,
-  Lock
+  MousePointer, 
+  Keyboard as KeyboardIcon, 
+  HelpCircle, 
+  Lock,
+  Flame,
+  AlertTriangle,
+  Timer,
+  Check
 } from 'lucide-react';
 import { ChromeIcon } from '../icons/ChromeIcon';
 import { useLearner } from '../../context/LearnerContext';
@@ -34,8 +39,12 @@ export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, 
     totalCommandsRun, 
     points,
     isCertificateUnlocked,
+    isMockExamPassed,
     mockExamPassed,
-    mockExamScore 
+    mockExamScore,
+    hardExamPassed,
+    hardExamScore,
+    hardExamDisqualified
   } = useLearner();
   const { switchOS, toggleTrackpad, toggleKeyboard, mobileControls } = useOS();
 
@@ -110,8 +119,8 @@ export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, 
           </div>
         </div>
 
-        {/* Quick Access Control Bar for Mobile */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Quick Access Control Bar for Mobile & Desktop */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <button
             onClick={onOpenChallenges}
             className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-blue-500/50 flex items-center justify-between transition-all group"
@@ -126,15 +135,31 @@ export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, 
           </button>
 
           <button
-            onClick={onOpenAssessment}
+            onClick={() => onOpenAssessment('standard')}
             className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-purple-500/50 flex items-center justify-between transition-all group"
           >
             <div className="text-left">
-              <div className="text-xs text-purple-400 font-semibold">120-Min • 500Q (90% Pass)</div>
+              <div className="text-xs text-purple-400 font-semibold">120-Min • 500Q</div>
               <div className="text-sm font-bold text-white group-hover:text-purple-400">Final Assessment</div>
             </div>
             <div className="p-2.5 rounded-xl bg-purple-500/10 text-purple-400">
               <Trophy className="w-5 h-5" />
+            </div>
+          </button>
+
+          <button
+            onClick={() => onOpenAssessment('hard')}
+            className="p-4 rounded-2xl bg-gradient-to-br from-red-950/40 to-slate-900 border border-red-500/30 hover:border-red-500/60 flex items-center justify-between transition-all group"
+          >
+            <div className="text-left">
+              <div className="text-xs text-red-400 font-bold flex items-center gap-1">
+                <Flame className="w-3.5 h-3.5 text-red-400" />
+                <span>2-Hr Proctored</span>
+              </div>
+              <div className="text-sm font-bold text-white group-hover:text-red-400">Hard 100Q Exam</div>
+            </div>
+            <div className="p-2.5 rounded-xl bg-red-500/20 text-red-400">
+              <ShieldAlert className="w-5 h-5" />
             </div>
           </button>
 
@@ -161,7 +186,7 @@ export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, 
 
           <button
             onClick={onOpenFounder}
-            className="p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 flex items-center justify-between transition-all group"
+            className="col-span-2 sm:col-span-1 p-4 rounded-2xl bg-slate-900 border border-slate-800 hover:border-emerald-500/50 flex items-center justify-between transition-all group"
           >
             <div className="text-left">
               <div className="text-xs text-slate-400">Silent Alerts</div>
@@ -171,6 +196,168 @@ export const LabHub = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, 
               <Sparkles className="w-5 h-5" />
             </div>
           </button>
+        </div>
+
+        {/* Official Examinations & Mock Assessments Showcase Arena */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-400" />
+                <span>Certification Examinations Arena</span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Qualify for the QR-verifiable SarlaYash OS Universe Master Certificate with strict evaluation standards.
+              </p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
+              isCertificateUnlocked 
+                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+            }`}>
+              {isCertificateUnlocked ? 'Credential Unlocked' : 'Certificate Locked'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {/* Standard 500Q Assessment Card */}
+            <div className="relative p-6 rounded-3xl bg-slate-900/90 border border-purple-500/30 hover:border-purple-500/60 shadow-xl space-y-4 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-700 text-white shadow-lg">
+                      <Trophy className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-base text-white">500-Question Final Assessment</h3>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                          Standard Mode
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">120 Minutes • Comprehensive Multi-OS Benchmark</p>
+                    </div>
+                  </div>
+
+                  {mockExamPassed ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Passed ({mockExamScore}%)</span>
+                    </span>
+                  ) : mockExamScore !== null ? (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                      Score: {mockExamScore}% (Need 90%)
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-slate-800 text-slate-400">
+                      Not Attempted
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Rigorous evaluation spanning Windows 11 Internals, Ubuntu Linux DevOps, macOS Unix/Zsh, and ChromeOS Cloud/Crostini architecture. Passing threshold: <strong>≥90% (450/500)</strong>.
+                </p>
+
+                {/* Key Metrics */}
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                    <div className="text-[10px] text-slate-400">Total MCQs</div>
+                    <div className="font-bold text-white font-mono">500 Questions</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                    <div className="text-[10px] text-slate-400">Duration</div>
+                    <div className="font-bold text-purple-400 font-mono">120 Minutes</div>
+                  </div>
+                  <div className="p-2.5 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                    <div className="text-[10px] text-slate-400">Passing Bar</div>
+                    <div className="font-bold text-emerald-400 font-mono">90% Required</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => onOpenAssessment('standard')}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 active:from-purple-700 active:to-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all"
+                >
+                  <Trophy className="w-4 h-4" />
+                  <span>{mockExamPassed ? 'Retake 500Q Assessment' : 'Launch 500Q Final Assessment'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Hard-Level Proctored Assessment Card */}
+            <div className="relative p-6 rounded-3xl bg-gradient-to-br from-red-950/20 via-slate-900 to-slate-900 border border-red-500/40 hover:border-red-500/70 shadow-xl space-y-4 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 rounded-2xl bg-gradient-to-br from-red-600 to-rose-800 text-white shadow-lg">
+                      <Flame className="w-6 h-6 text-amber-300" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-base text-white">Hard-Level Proctored Grandmaster</h3>
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/40">
+                          Anti-Cheat
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400">100 Hard MCQs • Strict 2-Hour Lockout • Live AI Watchdog</p>
+                    </div>
+                  </div>
+
+                  {hardExamDisqualified ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/50 animate-pulse">
+                      <ShieldAlert className="w-3.5 h-3.5" />
+                      <span>Disqualified (0%)</span>
+                    </span>
+                  ) : hardExamPassed ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Grandmaster Passed ({hardExamScore}%)</span>
+                    </span>
+                  ) : hardExamScore !== null ? (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                      Score: {hardExamScore}% (Need 90%)
+                    </span>
+                  ) : (
+                    <span className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-red-950/40 text-red-300 border border-red-800/40">
+                      Proctored Ready
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  Elite scenarios covering kernel internals, eBPF tracing, dm-verity, Mach-O security, and enterprise SAN storage.
+                </p>
+
+                {/* Strict Rules Highlights */}
+                <div className="p-3 rounded-2xl bg-red-950/30 border border-red-500/30 space-y-1.5 text-xs">
+                  <div className="flex items-center gap-2 text-red-300 font-bold">
+                    <ShieldAlert className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>Enforced Proctoring Policies:</span>
+                  </div>
+                  <ul className="text-[11px] text-slate-300 space-y-1 list-disc list-inside">
+                    <li><strong className="text-white">Strict 2 Hours:</strong> Cannot submit before 120 minutes expire.</li>
+                    <li><strong className="text-white">Zero Tolerance Anti-Cheat:</strong> Tab switch or screenshot = <strong>Immediately Disqualified (0%)</strong>.</li>
+                    <li><strong className="text-white">Badge Reward:</strong> Awards the exclusive <em>Proctor Grandmaster</em> champion badge.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => onOpenAssessment('hard')}
+                  className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-red-600 via-rose-600 to-amber-600 hover:from-red-500 hover:via-rose-500 hover:to-amber-500 active:from-red-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg transition-all"
+                >
+                  <Flame className="w-4 h-4 text-amber-300" />
+                  <span>{hardExamDisqualified ? 'Retry Proctored Assessment' : 'Enter 2-Hour Hard Proctored Exam'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Operating Systems Lab Grid */}

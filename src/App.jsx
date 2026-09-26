@@ -37,8 +37,14 @@ const MainLabContainer = () => {
   // Modal dialog states
   const [challengesOpen, setChallengesOpen] = useState(false);
   const [assessmentOpen, setAssessmentOpen] = useState(false);
+  const [assessmentType, setAssessmentType] = useState('standard'); // 'standard' | 'hard'
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [founderOpen, setFounderOpen] = useState(false);
+
+  const handleOpenAssessment = (type = 'standard') => {
+    setAssessmentType(type);
+    setAssessmentOpen(true);
+  };
 
   // Render OS Desktop
   const renderDesktop = () => {
@@ -67,7 +73,7 @@ const MainLabContainer = () => {
       {/* Top Universal Navbar & Quick Switcher */}
       <GlobalNavBar
         onOpenChallenges={() => setChallengesOpen(true)}
-        onOpenAssessment={() => setAssessmentOpen(true)}
+        onOpenAssessment={handleOpenAssessment}
         onOpenCertificate={() => setCertificateOpen(true)}
         onOpenFounder={() => setFounderOpen(true)}
       />
@@ -77,7 +83,7 @@ const MainLabContainer = () => {
         {mode === 'hub' && (
           <LabHub
             onOpenChallenges={() => setChallengesOpen(true)}
-            onOpenAssessment={() => setAssessmentOpen(true)}
+            onOpenAssessment={handleOpenAssessment}
             onOpenCertificate={() => setCertificateOpen(true)}
             onOpenFounder={() => setFounderOpen(true)}
           />
@@ -105,16 +111,14 @@ const MainLabContainer = () => {
       />
       <PracticalAssessmentModal
         isOpen={assessmentOpen}
+        initialExamType={assessmentType}
         onClose={() => setAssessmentOpen(false)}
         onOpenCertificate={() => setCertificateOpen(true)}
       />
       <CertificateModal
         isOpen={certificateOpen}
         onClose={() => setCertificateOpen(false)}
-        onOpenAssessment={() => {
-          setCertificateOpen(false);
-          setAssessmentOpen(true);
-        }}
+        onOpenAssessment={handleOpenAssessment}
       />
       <FounderPanelModal
         isOpen={founderOpen}

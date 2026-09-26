@@ -21,6 +21,10 @@ const defaultState = {
   mockExamScore: null,
   mockExamPassed: false,
   mockExamStats: null,
+  hardExamScore: null,
+  hardExamPassed: false,
+  hardExamStats: null,
+  hardExamDisqualified: false,
   issuedCertificate: null,
   points: 0
 };
@@ -78,10 +82,18 @@ export const LearnerProvider = ({ children }) => {
       newBadgeUnlocked = true;
     }
 
-    // 4. OS Champion: 120-minute 500Q Assessment score >= 90%
-    const isChampion = (newState.mockExamScore !== null && newState.mockExamScore >= 90) || newState.mockExamPassed;
+    // 4. OS Champion: 120-minute 500Q Assessment score >= 90% or Hard Exam >= 90%
+    const isChampion = (newState.mockExamScore !== null && newState.mockExamScore >= 90) || 
+                       (newState.hardExamScore !== null && newState.hardExamScore >= 90) || 
+                       newState.mockExamPassed;
     if (isChampion && !updatedBadges.includes('os_champion')) {
       updatedBadges.push('os_champion');
+      newBadgeUnlocked = true;
+    }
+
+    // 5. Proctor Grandmaster: Hard Exam passed without disqualification
+    if (newState.hardExamPassed && !updatedBadges.includes('hard_champion')) {
+      updatedBadges.push('hard_champion');
       newBadgeUnlocked = true;
     }
 
@@ -248,6 +260,41 @@ export const LearnerProvider = ({ children }) => {
     });
   };
 
+  // Submit 2-Hour 100 Hard-Level Proctored Assessment
+  const submitHardMockExam = ({ score, correctCount, totalQuestions, timeSpentSec, domainScores, isDisqualified = false, violationReason = null }) => {
+    setState(prev => {
+      const passed = !isDisqualified && score >= 90;
+      let completedChallenges = [...prev.completedChallenges];
+      let addedPoints = 0;
+
+      if (passed && !completedChallenges.includes('hard_assessment_champion')) {
+        completedChallenges.push('hard_assessment_champion');
+        addedPoints += 1000;
+      }
+
+      const nextState = {
+        ...prev,
+        hardExamScore: isDisqualified ? 0 : score,
+        hardExamPassed: passed,
+        hardExamDisqualified: isDisqualified,
+        hardExamStats: {
+          total: totalQuestions || 100,
+          correct: isDisqualified ? 0 : correctCount,
+          timeSpentSec: timeSpentSec || 0,
+          completedAt: new Date().toISOString(),
+          domainScores: domainScores || {},
+          isDisqualified,
+          violationReason
+        },
+        mockExamScore: passed ? Math.max(prev.mockExamScore || 0, score) : prev.mockExamScore,
+        mockExamPassed: prev.mockExamPassed || passed,
+        completedChallenges,
+        points: prev.points + addedPoints
+      };
+      return checkBadgeUnlocks(nextState);
+    });
+  };
+
   // Submit assessment (compatibility wrapper)
   const submitPracticalAssessment = (score) => {
     submitMockExam({
@@ -262,7 +309,10 @@ export const LearnerProvider = ({ children }) => {
   // Check section completion requirements
   const allOSInstalled = ['windows', 'linux', 'macos', 'chrome'].every(os => state.installedOS.includes(os));
   const allOSExplored = ['windows', 'linux', 'macos', 'chrome'].every(os => state.exploredOS.includes(os));
-  const isMockExamPassed = Boolean(state.mockExamPassed && state.mockExamScore !== null && state.mockExamScore >= 90);
+  const isMockExamPassed = Boolean(
+    (state.mockExamPassed && state.mockExamScore !== null && state.mockExamScore >= 90) ||
+    (state.hardExamPassed && state.hardExamScore !== null && state.hardExamScore >= 90)
+  );
   const isCertificateUnlocked = Boolean(allOSInstalled && allOSExplored && isMockExamPassed);
 
   // Issue Certificate (Official or Demo Preview)
@@ -305,6 +355,7 @@ export const LearnerProvider = ({ children }) => {
         markOSExplored,
         triggerChallengeEvent,
         submitMockExam,
+        submitHardMockExam,
         submitPracticalAssessment,
         generateOfficialCertificate,
         resetAllProgress,

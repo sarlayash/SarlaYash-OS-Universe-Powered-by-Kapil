@@ -5,21 +5,23 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
+  ShieldAlert,
   X, 
   Sparkles, 
   Award, 
   Search, 
   CheckCircle2, 
   QrCode, 
-  Check,
-  Lock,
-  AlertCircle,
-  FileText,
-  Image,
-  ArrowRight,
-  Laptop,
-  Terminal,
-  Apple
+  Check, 
+  Lock, 
+  AlertCircle, 
+  FileText, 
+  Image, 
+  ArrowRight, 
+  Laptop, 
+  Terminal, 
+  Apple,
+  Flame
 } from 'lucide-react';
 import { ChromeIcon } from '../icons/ChromeIcon';
 import { useLearner } from '../../context/LearnerContext';
@@ -30,10 +32,14 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
     learnerName, 
     installedOS, 
     exploredOS, 
-    allOSInstalled,
-    allOSExplored,
+    allOSInstalled, 
+    allOSExplored, 
     mockExamScore, 
-    isMockExamPassed,
+    mockExamPassed,
+    hardExamScore,
+    hardExamPassed,
+    hardExamDisqualified,
+    isMockExamPassed, 
     isCertificateUnlocked, 
     issuedCertificate, 
     generateOfficialCertificate 
@@ -508,8 +514,8 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
                   </div>
                 </div>
 
-                {/* Requirement 3: 120-min 500Q Assessment Passed (>= 90%) */}
-                <div className={`p-4 rounded-2xl border text-xs space-y-2.5 ${
+                {/* Requirement 3: 120-min Assessment Passed (>= 90%) */}
+                <div className={`p-4 rounded-2xl border text-xs space-y-3 ${
                   isMockExamPassed ? 'bg-emerald-950/20 border-emerald-500/40' : 'bg-slate-800/40 border-slate-700/80'
                 }`}>
                   <div className="flex items-center justify-between">
@@ -520,33 +526,71 @@ export const CertificateModal = ({ isOpen, onClose, onOpenAssessment }) => {
                         <Lock className="w-5 h-5 text-amber-400 shrink-0" />
                       )}
                       <div>
-                        <div className="font-bold text-white text-sm">3. Pass 120-Min 500Q Final Mock Assessment</div>
+                        <div className="font-bold text-white text-sm">3. Pass Final Mock Assessment (≥ 90%)</div>
                         <div className="text-[11px] text-slate-400">
-                          Strict passing threshold: <strong>90% (≥450 / 500 correct)</strong>
+                          Pass either the <strong>500Q Final Exam</strong> or <strong>Hard 100Q Proctored Exam</strong> with ≥90% score
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       <div className={`font-mono text-xs font-bold ${isMockExamPassed ? 'text-emerald-400' : 'text-amber-400'}`}>
-                        {mockExamScore !== null ? `${mockExamScore}%` : 'Not Attempted'}
+                        {isMockExamPassed
+                          ? `Passed (${Math.max(mockExamScore || 0, hardExamScore || 0)}%)`
+                          : (mockExamScore !== null || hardExamScore !== null)
+                          ? `Max: ${Math.max(mockExamScore || 0, hardExamScore || 0)}%`
+                          : 'Not Attempted'}
                       </div>
                       <div className="text-[10px] text-slate-500">Need ≥ 90%</div>
                     </div>
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between">
-                    <p className="text-[11px] text-slate-400">
-                      Covers Windows 11, Ubuntu Linux, macOS Sonoma, ChromeOS, and Cross-Platform Storage/Networking.
-                    </p>
-                    {onOpenAssessment && (
-                      <button
-                        onClick={onOpenAssessment}
-                        className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md flex items-center gap-1.5 shrink-0"
-                      >
-                        <span>Launch 120-Min Exam</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </button>
-                    )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-white text-xs">Standard 500Q Exam</div>
+                        <div className="text-[11px] text-slate-400">
+                          Score: <span className="font-mono text-purple-400 font-bold">{mockExamScore !== null ? `${mockExamScore}%` : 'Not Taken'}</span>
+                        </div>
+                      </div>
+                      {onOpenAssessment && (
+                        <button
+                          onClick={() => {
+                            onClose();
+                            onOpenAssessment('standard');
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow transition-all"
+                        >
+                          Take 500Q
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="p-3 rounded-xl bg-slate-900 border border-red-500/30 flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-white text-xs flex items-center gap-1">
+                          <Flame className="w-3.5 h-3.5 text-red-400" />
+                          <span>Hard 100Q Proctored</span>
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          {hardExamDisqualified ? (
+                            <span className="text-red-400 font-bold">Disqualified (0%)</span>
+                          ) : (
+                            <>Score: <span className="font-mono text-red-400 font-bold">{hardExamScore !== null ? `${hardExamScore}%` : 'Not Taken'}</span></>
+                          )}
+                        </div>
+                      </div>
+                      {onOpenAssessment && (
+                        <button
+                          onClick={() => {
+                            onClose();
+                            onOpenAssessment('hard');
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-500 text-white font-bold text-xs shadow transition-all"
+                        >
+                          Take 100Q
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

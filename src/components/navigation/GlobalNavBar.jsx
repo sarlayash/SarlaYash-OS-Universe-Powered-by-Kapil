@@ -17,7 +17,8 @@ import {
   Mail,
   Menu,
   X,
-  Lock
+  Lock,
+  Flame
 } from 'lucide-react';
 import { ChromeIcon } from '../icons/ChromeIcon';
 import { useOS } from '../../context/OSContext';
@@ -131,14 +132,23 @@ export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertifi
           <span>Challenges ({completedChallenges.length}/20)</span>
         </button>
 
-        {/* Assessment */}
+        {/* Assessment Options */}
         <button
-          onClick={onOpenAssessment}
+          onClick={() => onOpenAssessment('standard')}
           className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white"
           title="120-Minute 500-Question Final Mock Assessment"
         >
           <Trophy className="w-3.5 h-3.5 text-purple-400" />
           <span>500Q Exam</span>
+        </button>
+
+        <button
+          onClick={() => onOpenAssessment('hard')}
+          className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-950/40 hover:bg-red-900/50 border border-red-500/40 text-red-300 hover:text-white"
+          title="2-Hour 100 Hard-Level Proctored Assessment (Anti-Cheat Active)"
+        >
+          <Flame className="w-3.5 h-3.5 text-red-400" />
+          <span>Hard 100Q</span>
         </button>
 
         {/* Certificate */}
@@ -234,31 +244,38 @@ export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertifi
               Desktop
             </button>
           </div>
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-4 gap-1.5">
             <button
               onClick={onOpenChallenges}
-              className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold text-[10px]"
             >
-              <Award className="w-4 h-4 text-blue-400" />
+              <Award className="w-3.5 h-3.5 text-blue-400" />
               <span>Challenges</span>
             </button>
             <button
-              onClick={onOpenAssessment}
-              className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold"
+              onClick={() => onOpenAssessment('standard')}
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold text-[10px]"
             >
-              <Trophy className="w-4 h-4 text-purple-400" />
-              <span>500Q Exam</span>
+              <Trophy className="w-3.5 h-3.5 text-purple-400" />
+              <span>500Q</span>
+            </button>
+            <button
+              onClick={() => onOpenAssessment('hard')}
+              className="p-2 rounded-xl bg-red-950/60 hover:bg-red-900/60 border border-red-500/40 flex flex-col items-center gap-1 font-semibold text-[10px] text-red-300"
+            >
+              <Flame className="w-3.5 h-3.5 text-red-400" />
+              <span>Hard 100Q</span>
             </button>
             <button
               onClick={onOpenCertificate}
-              className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold"
+              className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold text-[10px]"
             >
               {isCertificateUnlocked ? (
-                <ShieldCheck className="w-4 h-4 text-amber-400" />
+                <ShieldCheck className="w-3.5 h-3.5 text-amber-400" />
               ) : (
-                <Lock className="w-4 h-4 text-amber-400/80" />
+                <Lock className="w-3.5 h-3.5 text-amber-400/80" />
               )}
-              <span>{isCertificateUnlocked ? 'Certificate' : 'Cert (Locked)'}</span>
+              <span>{isCertificateUnlocked ? 'Certificate' : 'Locked'}</span>
             </button>
           </div>
         </div>
