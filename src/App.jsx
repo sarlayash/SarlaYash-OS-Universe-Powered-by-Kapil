@@ -2,7 +2,7 @@
 // Mobile-First Virtual Computer Lab for Windows, Linux, macOS, and ChromeOS
 
 import React, { useState } from 'react';
-import { LearnerProvider } from './context/LearnerContext';
+import { LearnerProvider, useLearner } from './context/LearnerContext';
 import { OSProvider, useOS } from './context/OSContext';
 import { OnboardingModal } from './components/onboarding/OnboardingModal';
 import { GlobalNavBar } from './components/navigation/GlobalNavBar';
@@ -26,6 +26,7 @@ import { ChallengeDrawer } from './components/challenges/ChallengeDrawer';
 import { PracticalAssessmentModal } from './components/challenges/PracticalAssessmentModal';
 import { CertificateModal } from './components/certification/CertificateModal';
 import { FounderPanelModal } from './components/founder/FounderPanelModal';
+import { SecurityLockoutScreen } from './components/security/SecurityLockoutScreen';
 
 // Mobile Accessibility Tools
 import { VirtualTrackpad } from './components/mobile/VirtualTrackpad';
@@ -33,6 +34,7 @@ import { VirtualKeyboard } from './components/mobile/VirtualKeyboard';
 
 const MainLabContainer = () => {
   const { activeOS, mode } = useOS();
+  const { isCurrentlyLocked } = useLearner();
 
   // Modal dialog states
   const [challengesOpen, setChallengesOpen] = useState(false);
@@ -124,6 +126,9 @@ const MainLabContainer = () => {
         isOpen={founderOpen}
         onClose={() => setFounderOpen(false)}
       />
+
+      {/* 24-Hour Academic Integrity Lockout Screen */}
+      {isCurrentlyLocked && <SecurityLockoutScreen />}
     </div>
   );
 };

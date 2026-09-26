@@ -27,6 +27,7 @@ import {
   Flame,
   AlertTriangle,
   Siren,
+  Mail,
   Terminal,
   Laptop,
   Apple
@@ -36,6 +37,7 @@ import { ASSESSMENT_500_QUESTIONS } from '../../services/assessment500Engine';
 import { HARD_ASSESSMENT_QUESTIONS } from '../../services/hardAssessmentEngine';
 import { useLearner } from '../../context/LearnerContext';
 import { audioService } from '../../services/audioService';
+import { emailService } from '../../services/emailService';
 
 const TOTAL_TIME_SECONDS = 120 * 60; // 120 minutes = 7200 seconds (2 Hours)
 const PASSING_PERCENTAGE = 90; // 90% passing score strictly required
@@ -47,8 +49,10 @@ export const PracticalAssessmentModal = ({
   initialExamType = 'standard' 
 }) => {
   const { 
+    learnerName,
     submitMockExam, 
     submitHardMockExam,
+    applyCheatingLockout,
     mockExamScore, 
     hardExamScore,
     isCertificateUnlocked 
@@ -119,7 +123,7 @@ export const PracticalAssessmentModal = ({
   // =========================================================================
   // ANTI-CHEAT SURVEILLANCE ENGINE (Active in Hard Mode)
   // =========================================================================
-  const triggerTermination = (reason) => {
+  const triggerTermination = (reason, violationType = 'SECURITY_PROCTOR_BREACH') => {
     if (isTerminated || isSubmitted) return;
 
     audioService.playSecurityAlarm();
@@ -129,12 +133,39 @@ export const PracticalAssessmentModal = ({
     setViolationTimestamp(now);
     setIsTimerRunning(false);
 
-    // Record 0% disqualified score
+    const answeredCount = Object.keys(selectedAnswers).length;
+    const timeSpent = TOTAL_TIME_SECONDS - timeLeft;
+
+    // 1. Dispatch disciplinary email alert to kapilnarula27july@gmail.com & namaste@sarlayash.com
+    emailService.reportCheatingIncident({
+      learnerName: learnerName || 'Student',
+      violationReason: reason,
+      violationType,
+      examType: isHardMode ? 'Hard-Level Proctored Assessment (100 MCQs • 2 Hours)' : 'Standard 500Q Assessment',
+      answeredCount,
+      totalQuestions: 100,
+      timeSpentSec: timeSpent
+    }).then(res => {
+      console.info('[PracticalAssessment] Anti-cheat email alert sent:', res);
+    });
+
+    // 2. Lock learner account for 24 hours
+    applyCheatingLockout({
+      reason,
+      incidentData: {
+        violationType,
+        violationReason: reason,
+        formattedTime: new Date().toLocaleString(),
+        lockoutUntilFormatted: new Date(Date.now() + 24 * 60 * 60 * 1000).toLocaleString()
+      }
+    });
+
+    // 3. Record 0% disqualified score
     submitHardMockExam({
       score: 0,
       correctCount: 0,
       totalQuestions: 100,
-      timeSpentSec: TOTAL_TIME_SECONDS - timeLeft,
+      timeSpentSec: timeSpent,
       isDisqualified: true,
       violationReason: reason
     });
@@ -146,7 +177,7 @@ export const PracticalAssessmentModal = ({
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        triggerTermination('Tab switch or browser window minimization detected. Leaving the examination screen is strictly prohibited.');
+        triggerTermination('Tab switch or browser window minimization detected. Leaving the examination screen is strictly prohibited.', 'TAB_SWITCH_OR_MINIMIZED');
       }
     };
 
@@ -154,7 +185,7 @@ export const PracticalAssessmentModal = ({
       // Allow minor internal focus shifts, but catch actual window blur
       setTimeout(() => {
         if (document.hidden || !document.hasFocus()) {
-          triggerTermination('Window focus lost (user switched application or clicked outside the browser).');
+          triggerTermination('Window focus lost (user switched application or clicked outside the browser).', 'WINDOW_BLUR_LOST_FOCUS');
         }
       }, 350);
     };
@@ -176,35 +207,35 @@ export const PracticalAssessmentModal = ({
       // PrintScreen Key
       if (e.key === 'PrintScreen' || e.code === 'PrintScreen') {
         e.preventDefault();
-        triggerTermination('Screenshot attempt detected (PrintScreen key pressed). Capturing examination questions is strictly prohibited.');
+        triggerTermination('Screenshot attempt detected (PrintScreen key pressed). Capturing examination questions is strictly prohibited.', 'SCREENSHOT_PRINTSCREEN');
         return;
       }
 
       // Windows Snipping Tool (Win + Shift + S) or Ctrl + Shift + S
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
-        triggerTermination('Screen capture shortcut detected (Win/Cmd + Shift + S).');
+        triggerTermination('Screen capture shortcut detected (Win/Cmd + Shift + S).', 'SCREENSHOT_SNIPPING_TOOL');
         return;
       }
 
       // macOS Screen Capture shortcuts (Cmd + Shift + 3 / 4 / 5)
       if (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key)) {
         e.preventDefault();
-        triggerTermination('macOS Screen capture shortcut detected (Cmd + Shift + 3/4/5).');
+        triggerTermination('macOS Screen capture shortcut detected (Cmd + Shift + 3/4/5).', 'SCREENSHOT_MACOS_CAPTURE');
         return;
       }
 
       // Print dialog (Ctrl + P / Cmd + P)
       if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) {
         e.preventDefault();
-        triggerTermination('Print dialog attempt detected (Ctrl/Cmd + P).');
+        triggerTermination('Print dialog attempt detected (Ctrl/Cmd + P).', 'PRINT_DIALOG_ATTEMPT');
         return;
       }
 
       // DevTools Inspection (F12 or Ctrl + Shift + I)
       if (e.key === 'F12' || ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i'))) {
         e.preventDefault();
-        triggerTermination('Developer Tools / Source code inspection shortcut detected.');
+        triggerTermination('Developer Tools / Source code inspection shortcut detected.', 'DEVTOOLS_INSPECTION_ATTEMPT');
         return;
       }
     };
@@ -212,12 +243,13 @@ export const PracticalAssessmentModal = ({
     // Prevent copy/cut of questions
     const handleCopyCut = (e) => {
       e.preventDefault();
-      triggerTermination('Clipboard copy/cut detected. Copying questions to external search or AI tools is prohibited.');
+      triggerTermination('Clipboard copy/cut detected. Copying questions to external search or AI tools is prohibited.', 'CLIPBOARD_COPY_ATTEMPT');
     };
 
     // Disable Right-Click Context Menu
     const handleContextMenu = (e) => {
       e.preventDefault();
+      triggerTermination('Right-click context menu attempt detected during proctored exam.', 'CONTEXT_MENU_BREACH');
     };
 
     window.addEventListener('keydown', handleKeyDown, true);
@@ -829,19 +861,31 @@ export const PracticalAssessmentModal = ({
               {/* Specific Violation Details Box */}
               <div className="p-5 rounded-2xl bg-red-950/40 border border-red-600/60 text-left text-xs space-y-3 shadow-xl">
                 <div className="flex items-center justify-between border-b border-red-800/60 pb-2">
-                  <span className="font-bold text-red-300 uppercase tracking-wide">Violation Summary</span>
+                  <span className="font-bold text-red-300 uppercase tracking-wide">Disciplinary Breach Dossier</span>
                   <span className="font-mono text-red-400 text-[11px]">{violationTimestamp || 'Immediate'}</span>
                 </div>
 
                 <div className="space-y-1.5 text-slate-300">
                   <div><strong>Triggered Event:</strong> <span className="text-red-300 font-semibold">{terminationReason}</span></div>
                   <div><strong>Examination Status:</strong> <span className="text-red-400 font-bold uppercase">DISQUALIFIED (Score: 0%)</span></div>
+                  <div><strong>Account Status:</strong> <span className="text-amber-300 font-bold uppercase">LOCKED FOR 24 HOURS</span></div>
                   <div><strong>Questions Answered:</strong> {answeredCount} / {totalQuestions} (Voided)</div>
-                  <div><strong>Integrity Policy:</strong> SarlaYash Proctor Hard Assessment Security Standard</div>
+                </div>
+
+                {/* Email Dispatch Notice */}
+                <div className="p-3 rounded-xl bg-slate-950/80 border border-red-500/30 text-slate-300 space-y-1">
+                  <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-[11px]">
+                    <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Official Disciplinary Notice Dispatched To:</span>
+                  </div>
+                  <div className="text-[11px] text-slate-400 pl-5 font-mono space-y-0.5">
+                    <div>1. kapilnarula27july@gmail.com (Founder)</div>
+                    <div>2. namaste@sarlayash.com (Committee)</div>
+                  </div>
                 </div>
 
                 <p className="text-[11px] text-slate-400 pt-1 leading-relaxed border-t border-red-800/40">
-                  Under the SarlaYash Academic Integrity Policy, tab switching, window blurring, and screen capture shortcuts result in immediate forfeiture without exception.
+                  Under the SarlaYash Academic Integrity Policy, tab switching, window blurring, and screen capture shortcuts result in immediate 0% disqualification and mandatory 24-hour lab suspension.
                 </p>
               </div>
 
@@ -849,19 +893,10 @@ export const PracticalAssessmentModal = ({
               <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                 <button
                   onClick={onClose}
-                  className="px-6 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white shadow-lg transition-all"
+                  className="px-8 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-bold text-white shadow-xl flex items-center gap-2 transition-all"
                 >
-                  Acknowledge & Exit to Lab Hub
-                </button>
-                <button
-                  onClick={() => {
-                    setExamType('hard');
-                    handleRetake();
-                  }}
-                  className="px-6 py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-xs font-bold text-white shadow-lg flex items-center gap-2 transition-all"
-                >
-                  <RotateCw className="w-4 h-4" />
-                  <span>Restart Fresh Attempt</span>
+                  <Lock className="w-4 h-4" />
+                  <span>Enter 24-Hour Account Lockout Screen</span>
                 </button>
               </div>
             </div>

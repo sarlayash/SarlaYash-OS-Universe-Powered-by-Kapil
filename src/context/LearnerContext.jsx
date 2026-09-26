@@ -7,6 +7,7 @@ import { certificateService } from '../services/certificateService';
 import { audioService } from '../services/audioService';
 
 const LEARNER_STORAGE_KEY = 'sarlayash_learner_state_v1';
+const SECURITY_LOCKOUT_KEY = 'sarlayash_security_lockout_v1';
 
 const defaultState = {
   learnerName: '',
@@ -25,6 +26,9 @@ const defaultState = {
   hardExamPassed: false,
   hardExamStats: null,
   hardExamDisqualified: false,
+  lockoutUntil: null, // timestamp in ms (e.g. Date.now() + 24 * 60 * 60 * 1000)
+  lockoutReason: null,
+  lockoutIncident: null,
   issuedCertificate: null,
   points: 0
 };
@@ -33,15 +37,41 @@ const LearnerContext = createContext(null);
 
 export const LearnerProvider = ({ children }) => {
   const [state, setState] = useState(() => {
+    let base = defaultState;
     try {
       const stored = localStorage.getItem(LEARNER_STORAGE_KEY);
       if (stored) {
-        return { ...defaultState, ...JSON.parse(stored) };
+        base = { ...defaultState, ...JSON.parse(stored) };
       }
     } catch {
       // fallback
     }
-    return defaultState;
+
+    // Anti-tamper persistent security lockout check
+    try {
+      const secLockout = localStorage.getItem(SECURITY_LOCKOUT_KEY);
+      if (secLockout) {
+        const parsed = JSON.parse(secLockout);
+        if (parsed.lockoutUntil && Date.now() < parsed.lockoutUntil) {
+          base = {
+            ...base,
+            lockoutUntil: parsed.lockoutUntil,
+            lockoutReason: parsed.lockoutReason || 'Academic Integrity Violation Detected',
+            lockoutIncident: parsed.lockoutIncident || null,
+            hardExamDisqualified: true
+          };
+        } else if (parsed.lockoutUntil && Date.now() >= parsed.lockoutUntil) {
+          // Lockout naturally expired after 24 hours
+          localStorage.removeItem(SECURITY_LOCKOUT_KEY);
+          base.lockoutUntil = null;
+          base.lockoutReason = null;
+        }
+      }
+    } catch {
+      // fallback
+    }
+
+    return base;
   });
 
   // Save changes to localStorage
@@ -261,7 +291,22 @@ export const LearnerProvider = ({ children }) => {
   };
 
   // Submit 2-Hour 100 Hard-Level Proctored Assessment
-  const submitHardMockExam = ({ score, correctCount, totalQuestions, timeSpentSec, domainScores, isDisqualified = false, violationReason = null }) => {
+  const submitHardMockExam = ({ score, correctCount, totalQuestions, timeSpentSec, domainScores, isDisqualified = false, violationReason = null, incidentData = null }) => {
+    let computedLockoutUntil = null;
+    if (isDisqualified) {
+      computedLockoutUntil = Date.now() + (24 * 60 * 60 * 1000);
+      try {
+        localStorage.setItem(SECURITY_LOCKOUT_KEY, JSON.stringify({
+          lockoutUntil: computedLockoutUntil,
+          lockoutReason: violationReason,
+          lockoutIncident: incidentData,
+          lockedAt: new Date().toISOString()
+        }));
+      } catch (e) {
+        console.warn('Failed to store security lockout:', e);
+      }
+    }
+
     setState(prev => {
       const passed = !isDisqualified && score >= 90;
       let completedChallenges = [...prev.completedChallenges];
@@ -277,6 +322,9 @@ export const LearnerProvider = ({ children }) => {
         hardExamScore: isDisqualified ? 0 : score,
         hardExamPassed: passed,
         hardExamDisqualified: isDisqualified,
+        lockoutUntil: isDisqualified ? computedLockoutUntil : prev.lockoutUntil,
+        lockoutReason: isDisqualified ? violationReason : prev.lockoutReason,
+        lockoutIncident: isDisqualified ? incidentData : prev.lockoutIncident,
         hardExamStats: {
           total: totalQuestions || 100,
           correct: isDisqualified ? 0 : correctCount,
@@ -294,6 +342,54 @@ export const LearnerProvider = ({ children }) => {
       return checkBadgeUnlocks(nextState);
     });
   };
+
+  // Explicitly apply 24-Hour Account Lockout on Academic Dishonesty
+  const applyCheatingLockout = ({ reason, incidentData }) => {
+    const twentyFourHoursMs = 24 * 60 * 60 * 1000;
+    const lockoutUntil = Date.now() + twentyFourHoursMs;
+
+    const lockoutPayload = {
+      lockoutUntil,
+      lockoutReason: reason,
+      lockoutIncident: incidentData,
+      lockedAt: new Date().toISOString()
+    };
+
+    try {
+      localStorage.setItem(SECURITY_LOCKOUT_KEY, JSON.stringify(lockoutPayload));
+    } catch (e) {
+      console.warn('Failed to persist security lockout:', e);
+    }
+
+    setState(prev => ({
+      ...prev,
+      lockoutUntil,
+      lockoutReason: reason,
+      lockoutIncident: incidentData,
+      hardExamDisqualified: true,
+      hardExamScore: 0
+    }));
+  };
+
+  // Administrative / Founder Unlock Override
+  const unlockCheatingLockout = () => {
+    try {
+      localStorage.removeItem(SECURITY_LOCKOUT_KEY);
+    } catch (e) {
+      console.warn('Failed to clear security lockout storage:', e);
+    }
+
+    setState(prev => ({
+      ...prev,
+      lockoutUntil: null,
+      lockoutReason: null,
+      lockoutIncident: null
+    }));
+  };
+
+  // Check if account is currently locked
+  const isCurrentlyLocked = Boolean(state.lockoutUntil && Date.now() < state.lockoutUntil);
+  const lockoutRemainingMs = state.lockoutUntil ? Math.max(0, state.lockoutUntil - Date.now()) : 0;
 
   // Submit assessment (compatibility wrapper)
   const submitPracticalAssessment = (score) => {
@@ -339,6 +435,7 @@ export const LearnerProvider = ({ children }) => {
   // Reset Progress
   const resetAllProgress = () => {
     localStorage.removeItem(LEARNER_STORAGE_KEY);
+    localStorage.removeItem(SECURITY_LOCKOUT_KEY);
     setState(defaultState);
   };
 
@@ -350,6 +447,10 @@ export const LearnerProvider = ({ children }) => {
         allOSExplored,
         isMockExamPassed,
         isCertificateUnlocked,
+        isCurrentlyLocked,
+        lockoutRemainingMs,
+        applyCheatingLockout,
+        unlockCheatingLockout,
         completeOnboarding,
         markInstallationCompleted,
         markOSExplored,
