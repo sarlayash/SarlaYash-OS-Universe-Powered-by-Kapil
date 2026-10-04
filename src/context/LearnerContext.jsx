@@ -9,6 +9,44 @@ import { audioService } from '../services/audioService';
 const LEARNER_STORAGE_KEY = 'sarlayash_learner_state_v1';
 const SECURITY_LOCKOUT_KEY = 'sarlayash_security_lockout_v1';
 
+export const ALL_COURSE_MODULES = [
+  // OS Installation Wizards
+  { id: 'os_windows_install', category: 'Operating Systems', name: 'Windows 11 Setup & UEFI Partitioning', points: 100 },
+  { id: 'os_linux_install', category: 'Operating Systems', name: 'Ubuntu Linux 24.04 ext4 Installation', points: 100 },
+  { id: 'os_macos_install', category: 'Operating Systems', name: 'macOS Sonoma Setup Assistant', points: 100 },
+  { id: 'os_chrome_install', category: 'Operating Systems', name: 'ChromeOS Cloud & Account Setup', points: 100 },
+
+  // OS Desktop Explorations
+  { id: 'os_windows_desktop', category: 'Operating Systems', name: 'Windows 11 Explorer & CMD Diagnostics', points: 100 },
+  { id: 'os_linux_desktop', category: 'Operating Systems', name: 'Ubuntu GNOME Shell & Bash Scripting', points: 100 },
+  { id: 'os_macos_desktop', category: 'Operating Systems', name: 'macOS Finder, Dock & Zsh Terminal', points: 100 },
+  { id: 'os_chrome_desktop', category: 'Operating Systems', name: 'ChromeOS Crostini Linux Container', points: 100 },
+
+  // Spreadsheet Data Analytics Suite
+  { id: 'data_charts', category: 'Spreadsheet & Analytics', name: 'Interactive Data Charts Simulator', points: 150 },
+  { id: 'data_pivottables', category: 'Spreadsheet & Analytics', name: 'Pivot Tables Multi-Dimensional Builder', points: 200 },
+  { id: 'data_pivotcharts', category: 'Spreadsheet & Analytics', name: 'Pivot Charts & Dynamic Slicers', points: 150 },
+  { id: 'data_macros', category: 'Spreadsheet & Analytics', name: 'VBA & Apps Script Macros Simulator', points: 200 },
+
+  { id: 'kb_sheets_vs_excel', category: 'Knowledge Bytes', name: 'Master Summary: 50 Differences Overview', points: 150 },
+  { id: 'kb_collaboration', category: 'Knowledge Bytes', name: '1. Collaboration & Cloud Architecture (Bytes 1-5)', points: 100 },
+  { id: 'kb_scale', category: 'Knowledge Bytes', name: '2. Capacity, Scale Limits & Engine (Bytes 6-10)', points: 100 },
+  { id: 'kb_formulas', category: 'Knowledge Bytes', name: '3. Unique Formulas & QUERY Architecture (Bytes 11-15)', points: 100 },
+  { id: 'kb_dynamic_arrays', category: 'Knowledge Bytes', name: '4. Dynamic Arrays & Lambda Functions (Bytes 16-20)', points: 100 },
+  { id: 'kb_scripting', category: 'Knowledge Bytes', name: '5. Apps Script vs VBA / Office Scripts (Bytes 21-25)', points: 100 },
+  { id: 'kb_pivots', category: 'Knowledge Bytes', name: '6. Data Modeling, Pivots & Power Pivot (Bytes 26-30)', points: 100 },
+  { id: 'kb_visualization', category: 'Knowledge Bytes', name: '7. Charting, Visualization & Slicers (Bytes 31-35)', points: 100 },
+  { id: 'kb_architecture', category: 'Knowledge Bytes', name: '8. Desktop Native vs Web-First Architecture (Bytes 36-40)', points: 100 },
+  { id: 'kb_extensibility', category: 'Knowledge Bytes', name: '9. Integrations, Python & Ecosystem (Bytes 41-45)', points: 100 },
+  { id: 'kb_security', category: 'Knowledge Bytes', name: '10. Governance, Security & Pricing (Bytes 46-50)', points: 100 },
+
+  // Practical Challenges & Exams
+  { id: 'practical_challenges', category: 'Practical Labs', name: '20 Practical Multi-OS Terminal Challenges', points: 300 },
+  { id: 'final_exam_500q', category: 'Certifications', name: '120-Minute 500Q Comprehensive Final Exam', points: 500 },
+  { id: 'hard_exam_100q', category: 'Certifications', name: '2-Hour 100Q Proctored Hard Grandmaster Exam', points: 1000 },
+  { id: 'official_certificate', category: 'Certifications', name: 'QR-Verified Master Certificate Generation', points: 250 }
+];
+
 const defaultState = {
   learnerName: '',
   hasOnboarded: false,
@@ -17,6 +55,8 @@ const defaultState = {
   exploredOS: [],
   completedChallenges: [],
   earnedBadges: [],
+  completedModules: [], // array of module IDs marked as complete
+  acknowledgedKnowledgeBytes: [], // array of byte IDs (1..50) acknowledged
   totalCommandsRun: 0,
   assessmentScore: null,
   mockExamScore: null,
@@ -432,6 +472,78 @@ export const LearnerProvider = ({ children }) => {
     return cert;
   };
 
+  // Toggle Individual Module / Section Completion
+  const toggleModuleComplete = (moduleId) => {
+    setState(prev => {
+      const currentList = prev.completedModules || [];
+      const isAlready = currentList.includes(moduleId);
+      let updated;
+      let addedPoints = 0;
+      if (isAlready) {
+        updated = currentList.filter(m => m !== moduleId);
+      } else {
+        updated = [...currentList, moduleId];
+        const modDef = ALL_COURSE_MODULES.find(m => m.id === moduleId);
+        addedPoints = modDef ? modDef.points : 50;
+        audioService.playSuccess();
+      }
+      return {
+        ...prev,
+        completedModules: updated,
+        points: Math.max(0, prev.points + addedPoints)
+      };
+    });
+  };
+
+  // Mark ALL Modules and Sections Complete in Bulk
+  const markAllModulesComplete = () => {
+    const allIds = ALL_COURSE_MODULES.map(m => m.id);
+    const allByteIds = Array.from({ length: 50 }, (_, i) => i + 1);
+    audioService.playSuccess();
+    confetti({ particleCount: 150, spread: 90 });
+    setState(prev => ({
+      ...prev,
+      completedModules: allIds,
+      acknowledgedKnowledgeBytes: allByteIds,
+      installedOS: ['windows', 'linux', 'macos', 'chrome'],
+      exploredOS: ['windows', 'linux', 'macos', 'chrome'],
+      mockExamPassed: true,
+      mockExamScore: Math.max(prev.mockExamScore || 0, 96),
+      hardExamPassed: true,
+      hardExamScore: Math.max(prev.hardExamScore || 0, 94),
+      points: prev.points + 2500
+    }));
+  };
+
+  // Toggle Single Knowledge Byte Acknowledgement
+  const toggleKnowledgeByteAcknowledged = (byteId) => {
+    setState(prev => {
+      const current = prev.acknowledgedKnowledgeBytes || [];
+      const isAck = current.includes(byteId);
+      const updated = isAck ? current.filter(id => id !== byteId) : [...current, byteId];
+      if (!isAck) {
+        audioService.playClick();
+      }
+      return {
+        ...prev,
+        acknowledgedKnowledgeBytes: updated,
+        points: isAck ? prev.points : prev.points + 20
+      };
+    });
+  };
+
+  // Acknowledge All 50 Knowledge Bytes
+  const acknowledgeAllBytes = () => {
+    const all50 = Array.from({ length: 50 }, (_, i) => i + 1);
+    audioService.playSuccess();
+    confetti({ particleCount: 100, spread: 70 });
+    setState(prev => ({
+      ...prev,
+      acknowledgedKnowledgeBytes: all50,
+      points: prev.points + 1000
+    }));
+  };
+
   // Reset Progress
   const resetAllProgress = () => {
     localStorage.removeItem(LEARNER_STORAGE_KEY);
@@ -451,6 +563,15 @@ export const LearnerProvider = ({ children }) => {
         lockoutRemainingMs,
         applyCheatingLockout,
         unlockCheatingLockout,
+        completedModules: state.completedModules || [],
+        acknowledgedKnowledgeBytes: state.acknowledgedKnowledgeBytes || [],
+        toggleModuleComplete,
+        isModuleComplete: (id) => (state.completedModules || []).includes(id),
+        markAllModulesComplete,
+        toggleKnowledgeByteAcknowledged,
+        isByteAcknowledged: (id) => (state.acknowledgedKnowledgeBytes || []).includes(id),
+        acknowledgeAllBytes,
+        allCourseModules: ALL_COURSE_MODULES,
         completeOnboarding,
         markInstallationCompleted,
         markOSExplored,

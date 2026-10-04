@@ -28,6 +28,11 @@ import { CertificateModal } from './components/certification/CertificateModal';
 import { FounderPanelModal } from './components/founder/FounderPanelModal';
 import { SecurityLockoutScreen } from './components/security/SecurityLockoutScreen';
 
+// Spreadsheet & Knowledge Curricula Modals
+import SpreadsheetSuiteModal from './components/data/SpreadsheetSuiteModal';
+import KnowledgeBytesModal from './components/knowledge/KnowledgeBytesModal';
+import ModuleCompletionModal from './components/progress/ModuleCompletionModal';
+
 // Mobile Accessibility Tools
 import { VirtualTrackpad } from './components/mobile/VirtualTrackpad';
 import { VirtualKeyboard } from './components/mobile/VirtualKeyboard';
@@ -42,6 +47,9 @@ const MainLabContainer = () => {
   const [assessmentType, setAssessmentType] = useState('standard'); // 'standard' | 'hard'
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [founderOpen, setFounderOpen] = useState(false);
+  const [spreadsheetSuiteOpen, setSpreadsheetSuiteOpen] = useState(false);
+  const [knowledgeBytesOpen, setKnowledgeBytesOpen] = useState(false);
+  const [moduleTrackerOpen, setModuleTrackerOpen] = useState(false);
 
   const handleOpenAssessment = (type = 'standard') => {
     setAssessmentType(type);
@@ -78,6 +86,9 @@ const MainLabContainer = () => {
         onOpenAssessment={handleOpenAssessment}
         onOpenCertificate={() => setCertificateOpen(true)}
         onOpenFounder={() => setFounderOpen(true)}
+        onOpenSpreadsheetSuite={() => setSpreadsheetSuiteOpen(true)}
+        onOpenKnowledgeBytes={() => setKnowledgeBytesOpen(true)}
+        onOpenModuleTracker={() => setModuleTrackerOpen(true)}
       />
 
       {/* Main Interactive Stage */}
@@ -88,6 +99,9 @@ const MainLabContainer = () => {
             onOpenAssessment={handleOpenAssessment}
             onOpenCertificate={() => setCertificateOpen(true)}
             onOpenFounder={() => setFounderOpen(true)}
+            onOpenSpreadsheetSuite={() => setSpreadsheetSuiteOpen(true)}
+            onOpenKnowledgeBytes={() => setKnowledgeBytesOpen(true)}
+            onOpenModuleTracker={() => setModuleTrackerOpen(true)}
           />
         )}
 
@@ -107,24 +121,51 @@ const MainLabContainer = () => {
 
       {/* Popups & Drawers */}
       <OnboardingModal />
+      
       <ChallengeDrawer
         isOpen={challengesOpen}
         onClose={() => setChallengesOpen(false)}
       />
+
       <PracticalAssessmentModal
         isOpen={assessmentOpen}
         initialExamType={assessmentType}
         onClose={() => setAssessmentOpen(false)}
         onOpenCertificate={() => setCertificateOpen(true)}
       />
+
       <CertificateModal
         isOpen={certificateOpen}
         onClose={() => setCertificateOpen(false)}
         onOpenAssessment={handleOpenAssessment}
       />
+
       <FounderPanelModal
         isOpen={founderOpen}
         onClose={() => setFounderOpen(false)}
+      />
+
+      {/* Spreadsheet & Data Analytics Suite Modal */}
+      <SpreadsheetSuiteModal
+        isOpen={spreadsheetSuiteOpen}
+        onClose={() => setSpreadsheetSuiteOpen(false)}
+      />
+
+      {/* 50 Differences Knowledge Bytes Modal */}
+      <KnowledgeBytesModal
+        isOpen={knowledgeBytesOpen}
+        onClose={() => setKnowledgeBytesOpen(false)}
+      />
+
+      {/* Universal Course Modules & Section Completion Tracker */}
+      <ModuleCompletionModal
+        isOpen={moduleTrackerOpen}
+        onClose={() => setModuleTrackerOpen(false)}
+        onOpenSpreadsheetSuite={() => setSpreadsheetSuiteOpen(true)}
+        onOpenKnowledgeBytes={() => setKnowledgeBytesOpen(true)}
+        onOpenExam={() => handleOpenAssessment('standard')}
+        onOpenHardExam={() => handleOpenAssessment('hard')}
+        onOpenCertificate={() => setCertificateOpen(true)}
       />
 
       {/* 24-Hour Academic Integrity Lockout Screen */}

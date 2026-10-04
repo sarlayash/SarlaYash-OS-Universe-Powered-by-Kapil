@@ -18,13 +18,24 @@ import {
   Menu,
   X,
   Lock,
-  Flame
+  Flame,
+  BarChart2,
+  Lightbulb,
+  CheckCheck
 } from 'lucide-react';
 import { ChromeIcon } from '../icons/ChromeIcon';
 import { useOS } from '../../context/OSContext';
 import { useLearner } from '../../context/LearnerContext';
 
-export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertificate, onOpenFounder }) => {
+export const GlobalNavBar = ({ 
+  onOpenChallenges, 
+  onOpenAssessment, 
+  onOpenCertificate, 
+  onOpenFounder,
+  onOpenSpreadsheetSuite,
+  onOpenKnowledgeBytes,
+  onOpenModuleTracker
+}) => {
   const { activeOS, mode, setMode, switchOS, soundMuted, toggleSound, toggleTrackpad, toggleKeyboard, mobileControls } = useOS();
   const { completedChallenges, earnedBadges, isCertificateUnlocked } = useLearner();
   const [osDropdownOpen, setOsDropdownOpen] = useState(false);
@@ -123,6 +134,36 @@ export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertifi
 
       {/* Action Controls & Modal Triggers */}
       <div className="flex items-center gap-1.5">
+        {/* Data Lab Suite */}
+        <button
+          onClick={onOpenSpreadsheetSuite}
+          className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-cyan-950/40 hover:bg-cyan-900/50 border border-cyan-500/40 text-cyan-300 hover:text-white"
+          title="Spreadsheet Data Analytics Suite (Charts, Pivots, Macros)"
+        >
+          <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
+          <span>Data Lab</span>
+        </button>
+
+        {/* 50 Knowledge Bytes */}
+        <button
+          onClick={onOpenKnowledgeBytes}
+          className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-500/40 text-emerald-300 hover:text-white"
+          title="50 Differences: Google Sheets vs Excel"
+        >
+          <Lightbulb className="w-3.5 h-3.5 text-emerald-400" />
+          <span>50 Differences</span>
+        </button>
+
+        {/* Universal Module Progress */}
+        <button
+          onClick={onOpenModuleTracker}
+          className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-indigo-950/40 hover:bg-indigo-900/50 border border-indigo-500/40 text-indigo-300 hover:text-white"
+          title="Universal Module Completion Tracker (Mark as Complete)"
+        >
+          <CheckCheck className="w-3.5 h-3.5 text-indigo-400" />
+          <span>Progress</span>
+        </button>
+
         {/* Challenges Pill */}
         <button
           onClick={onOpenChallenges}
@@ -253,7 +294,7 @@ export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertifi
               <span>Challenges</span>
             </button>
             <button
-              onClick={() => onOpenAssessment('standard')}
+              onClick={onOpenAssessment('standard')}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 flex flex-col items-center gap-1 font-semibold text-[10px]"
             >
               <Trophy className="w-3.5 h-3.5 text-purple-400" />
@@ -276,6 +317,30 @@ export const GlobalNavBar = ({ onOpenChallenges, onOpenAssessment, onOpenCertifi
                 <Lock className="w-3.5 h-3.5 text-amber-400/80" />
               )}
               <span>{isCertificateUnlocked ? 'Certificate' : 'Locked'}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800">
+            <button
+              onClick={onOpenSpreadsheetSuite}
+              className="p-2 rounded-xl bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/30 flex flex-col items-center gap-1 font-semibold text-[10px] text-cyan-300"
+            >
+              <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Data Lab</span>
+            </button>
+            <button
+              onClick={onOpenKnowledgeBytes}
+              className="p-2 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/30 flex flex-col items-center gap-1 font-semibold text-[10px] text-emerald-300"
+            >
+              <Lightbulb className="w-3.5 h-3.5 text-emerald-400" />
+              <span>50 Diff</span>
+            </button>
+            <button
+              onClick={onOpenModuleTracker}
+              className="p-2 rounded-xl bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/30 flex flex-col items-center gap-1 font-semibold text-[10px] text-indigo-300"
+            >
+              <CheckCheck className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Progress</span>
             </button>
           </div>
         </div>
